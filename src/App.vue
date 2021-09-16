@@ -3,6 +3,7 @@
     <div v-if="!mobile" class="app flex">
       <Navigation></Navigation>
       <div class="app-content flex flex-column">
+        <InvoiceModal></InvoiceModal>
         <router-view/>
       </div>
     </div>
@@ -16,6 +17,7 @@
 </template>
 <script>
 import Navigation from "./components/Navigation";
+import InvoiceModal from "./components/InvoiceModal";
 
 export default {
   data() {
@@ -25,7 +27,8 @@ export default {
 
   },
   components: {
-    Navigation
+    Navigation,
+    InvoiceModal,
   },
   created() {
     /*check screen automatically hook*/
