@@ -3,7 +3,9 @@
     <div v-if="!mobile" class="app flex">
       <Navigation></Navigation>
       <div class="app-content flex flex-column">
-        <InvoiceModal v-if="invoiceModal"/>
+        <transition name="invoice">
+          <InvoiceModal v-if="invoiceModal"/>
+        </transition>
         <router-view/>
       </div>
     </div>
@@ -74,7 +76,15 @@ export default {
   }
 }
 
-.mobile-message{
+.app-content {
+  padding: 0 20px;
+  flex: 1;
+  position: relative;
+
+}
+
+
+.mobile-message {
   text-align: center;
   justify-content: center;
   align-items: center;
@@ -82,16 +92,23 @@ export default {
   background-color: #141625;
   color: #ffffff;
 
-  p{
+
+  p {
     margin-top: 16px;
   }
 }
 
-.app-content {
-  padding: 0 20px;
-  flex: 1;
-  position: relative;
+//animated invoice
+.invoice-enter-active,
+.invoice-leave-active{
+  transition: 0.8s ease all;
 }
+.invoice-enter-from,
+.invoice-leave-to{
+  transform: translateX(-700px);
+
+}
+
 
 button,
 .button {
