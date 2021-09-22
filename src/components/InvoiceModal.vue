@@ -193,6 +193,13 @@ export default {
   width: 100%;
   height: 100vh;
   overflow: scroll;
+  &::-webkit-scrollbar{   //chrome hide scroll bar
+    display: none;
+  }
+
+
+  -ms-overflow-style: none; //hide on IE
+  scrollbar-width: none;  //hide on firefox
   @media(min-width: 900px) {
     /*in reference to navigation width*/
     left: 90px;
