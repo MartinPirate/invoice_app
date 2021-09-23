@@ -1,6 +1,7 @@
 <template>
   <div @click="checkClick" class="invoice-wrap flex flex-column" ref="invoiceWrap">
     <form @submit.prevent="submitForm" class="invoice-content">
+      <Loading v-show="loading"/>
       <h1>New Invoice</h1>
       <!-- Bill From      -->
       <div class="bill_from flex flex-column">
@@ -125,7 +126,7 @@
           </div>
           <div class="right flex">
             <button @click="saveDraft" class="dark-purple">Save Draft</button>
-            <button @click="publihInvoice" class="purple">Create Invoice</button>
+            <button @click="publishInvoice" class="purple">Create Invoice</button>
 
 
           </div>
@@ -141,14 +142,17 @@
 </template>
 
 <script>
+import db from "../firebase/firebaseInt";
 import {mapMutations} from "vuex/dist/vuex.mjs";
 import {uid} from "uid";
+import Loading from "./Loading";
+
 
 export default {
   name: "invoiceModal",
   data() {
     return {
-      dateOptions:{year: "numeric", month: "short", day:"numeric"},
+      dateOptions: {year: "numeric", month: "short", day: "numeric"},
       docId: null,
       loading: null,
       billerStreetAddress: null,
@@ -174,6 +178,10 @@ export default {
     }
 
   },
+  components:
+      {
+        Loading
+      },
   created() {
     //get current date for invoice date field
     this.invoiceDateUnix = Date.now();
@@ -182,7 +190,7 @@ export default {
   methods:
       {
         ...mapMutations(['TOGGLE_INVOICE']),
-        closeInvoice(){
+        closeInvoice() {
           this.TOGGLE_INVOICE()
 
         },
@@ -191,17 +199,75 @@ export default {
             id: uid(),
             itemName: "",
             qty: "",
-            price:0,
-            total:0,
+            price: 0,
+            total: 0,
           })
         },
-        deleteInvoiceItem(id)
-        {
-          this.invoiceItemList = this.invoiceItemList.filter(item=> item.id !== id)
+        deleteInvoiceItem(id) {
+          this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id)
+        },
+        calculateInvoiceTotal() {
+          //reset invoice total
+          this.invoiceTotal = 0;
+          this.invoiceItemList.forEach(item => {
+            this.invoiceTotal += item.total;
+          })
+        },
+
+        publishInvoice() {
+          this.invoicePending = true;
+        },
+        saveDraft() {
+          this.invoiceDraft = true;
+        },
+
+        async uploadInvoice() {
+          if (this.invoiceItemList.length <= 0) {
+            alert("please ensure you fill out work item,")
+            return;
+          }
+          this.loading = true
+
+          this.calculateInvoiceTotal();
+
+          const database = db.collection('invoices').doc();
+
+          await database.set({
+            invoiceId: uid(6),
+            billerStreetAddress: this.billerStreetAddress,
+            billerCity: this.billerCity,
+            billerZipCode: this.billerZipCode,
+            billerCountry: this.billerCountry,
+            clientName: this.clientName,
+            clientEmail: this.clientEmail,
+            clientStreetAddress: this.clientStreetAddress,
+            clientCity: this.clientCity,
+            clientZipCode: this.clientZipCode,
+            clientCountry: this.clientCountry,
+            invoiceDate: this.invoiceDate,
+            invoiceDateUnix: this.invoiceDateUnix,
+            paymentTerms: this.paymentTerms,
+            paymentDueDate: this.paymentDueDate,
+            paymentDueDateUnix: this.paymentDueDateUnix,
+            productDescription: this.productDescription,
+            invoiceItemList: this.invoiceItemList,
+            invoiceTotal: this.invoiceTotal,
+            invoicePending: this.invoicePending,
+            invoiceDraft: this.invoiceDraft,
+            invoicePaid: null,
+          })
+
+          this.loading = false;
+
+          this.TOGGLE_INVOICE();
+        },
+        submitForm() {
+          this.uploadInvoice();
         }
+
       },
   watch: {
-    paymentTerms(){
+    paymentTerms() {
       const futureDate = new Date();
       this.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.paymentTerms));
       this.paymentDueDate = new Date(this.paymentDueDateUnix).toLocaleDateString('en-us', this.dateOptions)
@@ -222,13 +288,14 @@ export default {
   width: 100%;
   height: 100vh;
   overflow: scroll;
-  &::-webkit-scrollbar{   //chrome hide scroll bar
+
+  &::-webkit-scrollbar { //chrome hide scroll bar
     display: none;
   }
 
 
   -ms-overflow-style: none; //hide on IE
-  scrollbar-width: none;  //hide on firefox
+  scrollbar-width: none; //hide on firefox
   @media(min-width: 900px) {
     /*in reference to navigation width*/
     left: 90px;
@@ -335,30 +402,32 @@ export default {
             }
           }
         }
-        .button{
+
+        .button {
           color: #ffffff;
           background-color: #252945;
           align-items: center;
           justify-content: center;
           width: 100%;
 
-          img{
+          img {
             margin-right: 4px;
           }
         }
       }
 
 
-      .save{
+      .save {
         margin-top: 60px;
 
-        div{
+        div {
           flex: 1;
         }
 
-        .right{
+        .right {
           justify-content: right;
-        };
+        }
+      ;
       }
 
     }

@@ -10,7 +10,7 @@
   "dependencies": {
     "core-js": "^3.6.5",
     "eslint-config-standard": "^14.1.1",
-    "firebase": "^9.0.2",
+    "firebase": "7.13.1",
     "uid": "^2.0.0",
     "vue": "^3.0.11",
     "vue-router": "^4.0.0-0",
