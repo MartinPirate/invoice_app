@@ -27,11 +27,18 @@
       </div>
     </div>
   </div>
+  <!--Invoices  -->
+  <div>
+    <Invoice v-for="(invoice, index) in invoiceData" :invoice="invoice" :key="index"/>
+  </div>
+
 </template>
 
 <script>
 
-import {mapMutations} from "vuex";
+import {mapMutations, mapState} from "vuex";
+import Invoice from "../components/Invoice";
+
 export default {
   name: "Home",
   data() {
@@ -41,20 +48,26 @@ export default {
 
   },
 
-  components: {},
+  components: {
+    Invoice,
+  },
   methods: {
-  //commit mutation
+    //commit mutation
     ...mapMutations(['TOGGLE_INVOICE']),
 
-        newInvoice() {
-          //run mutation onclick
-          this.TOGGLE_INVOICE()
+    newInvoice() {
+      //run mutation onclick
+      this.TOGGLE_INVOICE()
 
-        },
-        toggleFilterMenu() {
-          this.filterMenu = !this.filterMenu
-        }
-      }
+    },
+    toggleFilterMenu() {
+      this.filterMenu = !this.filterMenu
+    }
+  },
+
+  computed: {
+    ...mapState(['invoiceData'])
+  }
 };
 </script>
 
