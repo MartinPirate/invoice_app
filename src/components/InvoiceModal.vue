@@ -142,6 +142,7 @@
 
 <script>
 import {mapMutations} from "vuex/dist/vuex.mjs";
+import {uid} from "uid";
 
 export default {
   name: "invoiceModal",
@@ -184,6 +185,19 @@ export default {
         closeInvoice(){
           this.TOGGLE_INVOICE()
 
+        },
+        addNewInvoiceItem() {
+          this.invoiceItemList.push({
+            id: uid(),
+            itemName: "",
+            qty: "",
+            price:0,
+            total:0,
+          })
+        },
+        deleteInvoiceItem(id)
+        {
+          this.invoiceItemList = this.invoiceItemList.filter(item=> item.id !== id)
         }
       },
   watch: {
