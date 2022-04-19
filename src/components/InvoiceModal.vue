@@ -2,7 +2,8 @@
   <div @click="checkClick" class="invoice-wrap flex flex-column" ref="invoiceWrap">
     <form @submit.prevent="submitForm" class="invoice-content">
       <Loading v-show="loading"/>
-      <h1>New Invoice</h1>
+      <h1 v-if="!editInvoice">New Invoice</h1>
+      <h1 v-else>Edit Invoice</h1>
       <!-- Bill From      -->
       <div class="bill_from flex flex-column">
         <h4>Bill From</h4>
@@ -21,7 +22,7 @@
           </div>
           <div class="input flex flex-column">
             <label for="billercity">City </label>
-            <input required type="text" id="billercity" v-model="billercity">
+            <input required type="text" id="billerCity" v-model="billerCity">
           </div>
           <div class="input flex flex-column">
             <label for="billerZipCode">Zip Code </label>
@@ -125,8 +126,9 @@
 
           </div>
           <div class="right flex">
-            <button type="submit" @click="saveDraft" class="dark-purple">Save Draft</button>
-            <button type="submit" @click="publishInvoice" class="purple">Create Invoice</button>
+            <button v-if="!editInvoice" type="submit" @click="saveDraft" class="dark-purple">Save Draft</button>
+            <button v-if="!editInvoice" type="submit" @click="publishInvoice" class="purple">Create Invoice</button>
+            <button v-if="editInvoice" type="submit" @click="updateInvoice" class="purple">Update</button>
 
 
           </div>
@@ -143,9 +145,10 @@
 
 <script>
 import db from "../firebase/firebaseInt";
-import {mapMutations} from "vuex/dist/vuex.mjs";
+import {mapMutations, mapState} from "vuex/dist/vuex.mjs";
 import {uid} from "uid";
 import Loading from "./Loading";
+import {mapActions} from "vuex";
 
 
 export default {
@@ -153,7 +156,7 @@ export default {
   data() {
     return {
       dateOptions: {year: "numeric", month: "short", day: "numeric"},
-      docId: null,
+      docId : null,
       loading: null,
       billerStreetAddress: null,
       billerCity: null,
@@ -184,24 +187,58 @@ export default {
       },
   created() {
     //get current date for invoice date field
-    this.invoiceDateUnix = Date.now();
-    this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString('en-us', this.dateOptions)
+    if (!this.editInvoice) {
+      this.invoiceDateUnix = Date.now();
+      this.invoiceDate = new Date(this.invoiceDateUnix).toLocaleDateString('en-us', this.dateOptions)
+    }
+    if (this.editInvoice) {
+      const currentInvoice = this.currentInvoiceArray[0]
+      this.docId = currentInvoice.docId;
+      this.billerStreetAddress = currentInvoice.billerStreetAddress;
+      this.billerCity = currentInvoice.billerCity;
+      this.billerZipCode = currentInvoice.billerZipCode;
+      this.billerCountry = currentInvoice.billerCountry;
+      this.clientName = currentInvoice.clientName;
+      this.clientEmail = currentInvoice.clientEmail;
+      this.clientStreetAddress = currentInvoice.clientStreetAddress;
+      this.clientCity = currentInvoice.clientCity;
+      this.clientZipCode = currentInvoice.clientZipCode;
+      this.clientCountry = currentInvoice.clientCountry;
+      this.invoiceDateUnix = currentInvoice.invoiceDateUnix;
+      this.invoiceDate = currentInvoice.invoiceDate;
+      this.paymentTerms = currentInvoice.paymentTerms;
+      this.paymentDueDateUnix = currentInvoice.paymentDueDateUnix;
+      this.paymentDueDate = currentInvoice.paymentDueDate;
+      this.productDescription = currentInvoice.productDescription;
+      this.invoicePending = currentInvoice.invoicePending;
+      this.invoiceDraft = currentInvoice.invoiceDraft;
+      this.invoiceItemList = currentInvoice.invoiceItemList;
+      this.invoiceTotal = currentInvoice.invoiceTotal;
+
+    }
+
   },
   methods:
       {
-        ...mapMutations(["TOGGLE_INVOICE", "TOGGLE_MODAL"]),
+        ...mapMutations(["TOGGLE_INVOICE", "TOGGLE_MODAL", "TOGGLE_EDIT_INVOICE"]),
 
-     checkClick(e) {
+        ...mapActions(['UPDATE_INVOICE']),
+
+        checkClick(e) {
           //use of ref if its equivalent  too
-          if (e.target === this.$refs.invoiceWrap){
+          if (e.target === this.$refs.invoiceWrap) {
             this.TOGGLE_MODAL();
           }
         },
 
         closeInvoice() {
           this.TOGGLE_INVOICE()
+          if (this.editInvoice) {
+            this.TOGGLE_EDIT_INVOICE()
+          }
 
         },
+
         addNewInvoiceItem() {
           this.invoiceItemList.push({
             id: uid(),
@@ -211,9 +248,11 @@ export default {
             total: 0,
           })
         },
+
         deleteInvoiceItem(id) {
           this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id)
         },
+
         calculateInvoiceTotal() {
           //reset invoice total
           this.invoiceTotal = 0;
@@ -225,8 +264,52 @@ export default {
         publishInvoice() {
           this.invoicePending = true;
         },
+
         saveDraft() {
           this.invoiceDraft = true;
+        },
+
+        async updateInvoice() {
+          if (this.invoiceItemList.length <= 0) {
+            alert("please ensure you fill out work item,")
+            return;
+          }
+          this.loading = true
+
+          this.calculateInvoiceTotal();
+
+
+          const database = db.collection('invoices').doc(this.docId);
+
+          await database.update({
+            billerStreetAddress: this.billerStreetAddress,
+            billerCity: this.billerCity,
+            billerZipCode: this.billerZipCode,
+            billerCountry: this.billerCountry,
+            clientName: this.clientName,
+            clientEmail: this.clientEmail,
+            clientStreetAddress: this.clientStreetAddress,
+            clientCity: this.clientCity,
+            clientZipCode: this.clientZipCode,
+            clientCountry: this.clientCountry,
+            paymentTerms: this.paymentTerms,
+            paymentDueDate: this.paymentDueDate,
+            paymentDueDateUnix: this.paymentDueDateUnix,
+            productDescription: this.productDescription,
+            invoiceItemList: this.invoiceItemList,
+            invoiceTotal: this.invoiceTotal,
+
+          });
+
+          this.loading = false;
+
+          const data = {
+            docId : this.docId,
+            routeId: this.$route.params.invoiceId,
+          }
+
+           await this.UPDATE_INVOICE(data);
+
         },
 
         async uploadInvoice() {
@@ -269,11 +352,20 @@ export default {
 
           this.TOGGLE_INVOICE();
         },
+
         submitForm() {
+          if (this.editInvoice) {
+            this.updateInvoice()
+            return;
+          }
           this.uploadInvoice();
         }
 
       },
+  computed: {
+    ...mapState(['editInvoice', 'currentInvoiceArray']),
+
+  },
   watch: {
     paymentTerms() {
       const futureDate = new Date();

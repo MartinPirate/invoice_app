@@ -16,7 +16,7 @@
       </div>
 
       <div class="right flex">
-        <button class="dark-purple" @click="toggleEditInvoice(currentInvoice.docId)">Edit Invoice</button>
+        <button class="dark-purple" @click="toggleEditInvoice">Edit Invoice</button>
         <button class="red" @click="deleteInvoice(currentInvoice.docId)"> Delete Invoice</button>
         <button v-if="currentInvoice.invoicePending" class="green" @click="updateStatusToPaid(currentInvoice.docId)">
           Mark As Paid
@@ -95,7 +95,7 @@
 
 <script>
 
-import {mapMutations, mapState} from "vuex";
+import  {mapMutations,mapActions, mapState} from "vuex";
 
 export default {
   name: "InvoiceView",
@@ -110,17 +110,38 @@ export default {
 
   methods: {
 
-    ...mapMutations(['SET_CURRENT_INVOICE']),
+    ...mapMutations(['SET_CURRENT_INVOICE', 'TOGGLE_EDIT_INVOICE', 'TOGGLE_INVOICE']),
+
+    ...mapActions(['DELETE_INVOICE']),
 
     getCurrentInvoice() {
       this.SET_CURRENT_INVOICE(this.$route.params.invoiceId)  //get Router ID
       this.currentInvoice = this.currentInvoiceArray[0];
 
+    },
+
+    toggleEditInvoice() {
+      this.TOGGLE_EDIT_INVOICE();
+      this.TOGGLE_INVOICE();
+    },
+
+    async deleteInvoice(docId) {
+      await this.DELETE_INVOICE(docId)
+      await this.$router.push({name: "Home"})
     }
+
+
   },
   computed: {
-    ...mapState(['currentInvoiceArray'])
+    ...mapState(['currentInvoiceArray', 'editInvoice'])
   },
+  watch: {
+    editInvoice() {
+      if (!this.editInvoice) {
+        this.currentInvoice = this.currentInvoiceArray[0]
+      }
+    },
+  }
 }
 </script>
 

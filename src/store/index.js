@@ -7,7 +7,8 @@ export default createStore({
         invoiceModal: null,
         modalActive: null,  /*collect way to update a state is through mutations*/
         invoicesLoaded: null,
-        currentInvoiceArray : null,
+        currentInvoiceArray: null,
+        editInvoice: null
     },
     mutations: {
         TOGGLE_INVOICE(state) {
@@ -25,13 +26,18 @@ export default createStore({
         INVOICES_LOADED(state) {
             state.invoicesLoaded = true;
         },
-        SET_CURRENT_INVOICE(state, payload)
-        {
-            state.currentInvoiceArray = state.invoiceData.filter(invoice=>
-            {
+        SET_CURRENT_INVOICE(state, payload) {
+            state.currentInvoiceArray = state.invoiceData.filter(invoice => {
                 return invoice.invoiceId === payload;
             })
-        }
+        },
+        TOGGLE_EDIT_INVOICE(state) {
+            state.editInvoice = !state.editInvoice
+        },
+
+        DELETE_INVOICE(state, payload) {  /*payload or payloadId*/
+            state.invoiceData = state.invoiceData.filter(invoice => invoice.docId !== payload)
+        },
     },
     actions: {
         async GET_INVOICES({commit, state}) {
@@ -64,7 +70,7 @@ export default createStore({
                         invoiceDraft: doc.data().invoiceDraft,
                         invoicePaid: doc.data().invoicePaid,
                     };
-                    //never update state inside of an Action
+                    //never update state inside an Action
                     //no updating states inside an action
                     //always commit a mutation
                     commit("SET_INVOICE_DATA", data)
@@ -72,7 +78,22 @@ export default createStore({
             });
             commit('INVOICES_LOADED')
 
+        },
+        async UPDATE_INVOICE({commit, dispatch}, {docId, routeId}) {
+            commit('DELETE_INVOICE', docId);
+            await dispatch('GET_INVOICES');
+            commit('TOGGLE_INVOICE')
+            commit('TOGGLE_EDIT_INVOICE');
+            commit('SET_CURRENT_INVOICE', routeId);
+
+
+        },
+        async DELETE_INVOICE({commit},docId){
+            const getInvoice = db.collection("invoices").doc(docId)
+            await  getInvoice.delete();
+            commit("DELETE_INVOICE", docId)
         }
     },
+
     modules: {}
 })
