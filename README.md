@@ -1,6 +1,6 @@
 # invoice-app
 
-
+simple invoice app using firebase, Reduce and Vue 3, with filters, and other cool stuff
 
  ##### Homepage
 <p align="center">
