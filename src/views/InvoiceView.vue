@@ -95,7 +95,7 @@
 
 <script>
 
-import  {mapMutations,mapActions, mapState} from "vuex";
+import {mapMutations, mapActions, mapState} from "vuex";
 
 export default {
   name: "InvoiceView",
@@ -112,7 +112,7 @@ export default {
 
     ...mapMutations(['SET_CURRENT_INVOICE', 'TOGGLE_EDIT_INVOICE', 'TOGGLE_INVOICE']),
 
-    ...mapActions(['DELETE_INVOICE']),
+    ...mapActions(['DELETE_INVOICE', "UPDATE_STATUS_TO_PENDING", "UPDATE_STATUS_TO_PAID"]),
 
     getCurrentInvoice() {
       this.SET_CURRENT_INVOICE(this.$route.params.invoiceId)  //get Router ID
@@ -128,6 +128,14 @@ export default {
     async deleteInvoice(docId) {
       await this.DELETE_INVOICE(docId)
       await this.$router.push({name: "Home"})
+    },
+
+    updateStatusToPaid(docId) {
+      this.UPDATE_STATUS_TO_PAID(docId)
+    },
+
+    updateStatusToPending(docId) {
+      this.UPDATE_STATUS_TO_PENDING(docId)
     }
 
 
